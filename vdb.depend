@@ -1,0 +1,126 @@
+# depslib dependency file v1.0
+1402314956 source:/mnt/c/prj/vdb/vdb.c
+	"vdb-2.2.c"
+	"vdt-1.0.c"
+
+1402315475 /mnt/c/prj/vdb/vdb-2.2.c
+	"vdb.h"
+	<stdlib.h>
+	<stdio.h>
+	<stdarg.h>
+	"windows.h"
+	<dlfcn.h>
+	<link.h>
+
+1402314322 /mnt/c/prj/vdb/vdb.h
+	"vtypes.h"
+	<time.h>
+	"windows.h"
+	"u_pb.h"
+	"vds.h"
+
+1400828470 /mnt/c/prj/vos/vtypes.h
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+
+1219378260 /mnt/c/prj/vdb/vdt-1.0.c
+	"vdb.h"
+	<time.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<stdlib.h>
+	<math.h>
+	<time.h>
+	<string.h>
+	<stdio.h>
+
+1402315745 source:/mnt/c/prj/vdb/vdbcon.c
+	"vos.h"
+	"vdb.h"
+	"stdio.h"
+
+1402315256 /mnt/c/prj/vos/vos.h
+	"vtypes.h"
+	<fcntl.h>
+	<netdb.h>
+	<sys/stat.h>
+	<sys/socket.h>
+	<windows.h>
+	<unistd.h>
+
+1402314278 source:/mnt/c/prj/vdb/vodbc.c
+	"vdb.h"
+	<stdio.h>
+	<sql.h>
+	<sqlext.h>
+
+1402315214 source:/mnt/c/prj/vdb/main.c
+	<stdio.h>
+	<stdlib.h>
+	"vos.h"
+	"vos.c"
+
+1402310288 /mnt/c/prj/vos/vos.c
+	"vos.h"
+	"pthread.h"
+	"stdlib.h"
+	"unistd.h"
+	<sys/time.h>
+	<stdio.h>
+	<sys/resource.h>
+
+1402316814 source:/mnt/c/prj/vdb/vsqlite.c
+	"vdb.h"
+	<sqlite3.h>
+	<time.h>
+	<stdio.h>
+	"coders.h"
+	"vos.h"
+
+1400828435 /mnt/c/prj/vos/coders.h
+	"vtypes.h"
+
+1252654500 source:/mnt/c/prj/vdb/sqlite3/sqlite3.c
+	"config.h"
+	<stdint.h>
+	<inttypes.h>
+	<tcl.h>
+	<stdarg.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<assert.h>
+	<stddef.h>
+	<windows.h>
+	<os2safe.h>
+	<os2.h>
+	<uconv.h>
+	<ctype.h>
+	<time.h>
+	<pthread.h>
+	<math.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<fcntl.h>
+	<unistd.h>
+	<sys/time.h>
+	<errno.h>
+	<sys/ioctl.h>
+	<semaphore.h>
+	<limits.h>
+	<sys/file.h>
+	<sys/param.h>
+	<sys/mount.h>
+	<dlfcn.h>
+	<winbase.h>
+	<sys/cygwin.h>
+	<unicode/utypes.h>
+	<unicode/uregex.h>
+	<unicode/ustring.h>
+	<unicode/ucol.h>
+	<unicode/ubrk.h>
+	<unicode/utf16.h>
+

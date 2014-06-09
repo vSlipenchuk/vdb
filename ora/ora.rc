@@ -1,0 +1,25 @@
+#include <windows.h>
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 3,0,11,1
+ PRODUCTVERSION 3,0,11,1
+ FILEFLAGSMASK 0x3fL
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000004b0"
+        BEGIN
+            VALUE "FileDescription", "Oracle 10g vdb driver\0"
+            VALUE "FileVersion", "3, 0, 11, 1\0"
+            VALUE "InternalName", "ora\0"
+            VALUE "LegalCopyright", "(c) SMT-ICC, 2008\0" 
+        END
+    END 
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1200
+    END
+END

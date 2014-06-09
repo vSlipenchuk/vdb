@@ -1,0 +1,75 @@
+OOCI=c:/c/oci
+OCI=d:\oracle\product\10.2.0.\db_1\oci
+Cyber=d:\prj\CyberPlat
+SSL=d:\prj\ssl\openssl-0.9.ok
+IB_PATH= c:\ibase
+SQ_PATH= .\sqlite3
+INCLUDE=$(SSL)\include;$(INCLUDE);..\i
+
+CFILE=v8.c  vos.c vsClass.c vsDB.c coders.c vdb.c vdb2.c db_dbf.c vss.c vsGear.c vsLog.c vsMem.c vsOS.c vsRun.c vsSSL.c vsSocket.c vsString.c vsWIN.c vsc.c
+
+all:  sq3u.so
+
+vora10g.dll: ora.c ora.res 
+	$(CC) -D_DLL -DMSWIN -D_MT -I$(OCI)/include ora.c ../i/vdb.c ora.res /link /dll /out:vora10g.dll\
+        msvcrt.lib msvcrt.lib $(OCI)/lib/msvc/oci.lib advapi32.lib /nodefaultlib:libc /export:prefix  /export:ora_connect 
+
+
+old: vib.dll vora10g.dll vsqlite3.dll
+
+clean:
+	erase *.exp *.dll 
+
+rc:	
+	rcmake ora > ora.rc
+	rcmake vib > vib.rc 
+
+
+arc:   
+	v8 test/arc.v8
+
+tests:
+	v8.exe -d0 -n0 tester.v8
+
+update:
+        cp v8.exe c:/bin
+        
+
+sq3u.so:  vsqlite.c vdb.c
+	$(CC) gcc -shared -o sq3u.so vsqlte.c vdb.c
+
+
+
+vsqlite3u.dll: vsqlite.c vdb.c vsqlite.res
+	$(CC) -D_DLL -DMSWIN -D_MT -I$(SQ_PATH) vsqlite.c vdb.c vsqlite.res $(SQ_PATH)/sqlite3.c ../i/coders.c /link /dll /out:vsqlite3u.dll\
+        msvcrt.lib advapi32.lib /nodefaultlib:libc /export:prefix  /export:sq_connect 
+
+
+v8.exe: $(CFILE)
+	$(CC) $(CFILE) \
+          wsock32.lib psapi.lib user32.lib gdi32.lib advapi32.lib comctl32.lib  $(SSL)/out32dll/libeay32.lib $(SSL)/out32dll/ssleay32.lib
+
+vib.dll: vib.c  vib.res vdb.c
+	$(CC) -DMSWIN -DWIN32 /MD -D_DLL -D_MT -I$(IB_PATH)\include vib.c  vdb.c /link /dll  /nodefaultlib:libc \
+        msvcrt.lib $(IB_PATH)\lib\fbclient_ms.lib advapi32.lib  /export:prefix  /export:ib_connect /out:vib.dll
+
+vodbc.dll: vodbc.c vodbc.res ../i/vdb.c
+	$(CC) -DMSWIN -DWIN32 /MD -D_DLL -D_MT vodbc.c -I../i ../i/vdb.c /link /dll  /nodefaultlib:libc \
+        msvcrt.lib odbc32.lib advapi32.lib vodbc.res  /export:prefix  /export:dbo_connect /out:vodbc.dll
+
+  
+vdb2.dll: vdb.c vdb.res makefile 
+	$(CC) -D_DLL -DMSWIN -D_MT ../i/vdb.c /link /dll /out:vdb2.dll\
+        msvcrt.lib advapi32.lib /nodefaultlib:libc /export:db_connect_string\
+        /export:db_fetch /export:db_open /export:db_exec /export:db_commit \
+        /export:db_rollback /export:db_text_buf /export:db_int /export:db_new \
+        /export:db_release /export:db_compile
+
+
+
+vdbcon.exe: vdbcon.c
+	$(CC) -DMSWIN vdbcon.c vdb.c advapi32.lib psapi.lib
+
+vsCyber.dll: vsCyber.c 
+ 	$(CC) -D_DLL -D_MT -I$(Cyber) vsCyber.c $(Cyber)/libipriv.lib /link /dll /out:vsCyber.dll  /export:vsopen
+
