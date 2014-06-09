@@ -2,12 +2,18 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
 	<File name="main.c" open="1" top="0" tabpos="3">
-		<Cursor position="55" topLine="0" />
+		<Cursor position="39" topLine="0" />
+	</File>
+	<File name="sqlite3/sqlite3.c" open="1" top="0" tabpos="8">
+		<Cursor position="3065630" topLine="87328" />
 	</File>
 	<File name="vdb.c" open="1" top="0" tabpos="2">
-		<Cursor position="170" topLine="0" />
+		<Cursor position="186" topLine="0" />
 	</File>
-	<File name="vdbcon.c" open="1" top="0" tabpos="1">
-		<Cursor position="5441" topLine="99" />
+	<File name="vdbcon.c" open="1" top="1" tabpos="1">
+		<Cursor position="292" topLine="26" />
+	</File>
+	<File name="vsqlite.c" open="1" top="0" tabpos="6">
+		<Cursor position="7863" topLine="208" />
 	</File>
 </CodeBlocks_layout_file>
