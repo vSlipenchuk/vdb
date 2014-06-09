@@ -10,8 +10,12 @@ return 0;
 
 
 int db_nextN(database *db,char *table) {
-if (db->typ_seq==2) db_selectf(db,"select sq_%s.NextVal from dual",table);
- else db_selectf(db,"select max(N) from %s",table);
+if (db->typ_seq==2) {
+     if (db_selectf(db,"select sq_%s.NextVal from dual",table) <0
+          || db_fetch(db) <0) return -1;
+     return db_int(db->out.cols);
+     }
+if (db_selectf(db,"select max(N) from %s",table)<0) return -1;
 if (!db_fetch(db)) return 1; // NewOne
 return db_int(db->out.cols)+1;
 }

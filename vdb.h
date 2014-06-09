@@ -4,7 +4,7 @@
 
 #include "vtypes.h"
 
-#define vdb_version "2.2.0.0"
+#define vdb_version "2.3.0.0"
 #include <time.h>
 
 #ifdef MSWIN
@@ -147,6 +147,7 @@ typedef  struct
    int fetchable; // Флаг указывает открытый датасет.
    int transaction; // Флаг указывает есть открытая транзакция или нет
    int reserv[26];
+   int typ_seq; // sequence type (2 - NextVal, other max(N)+1
    //char db_name[DB_MAX_NAME];
    } database;
 
