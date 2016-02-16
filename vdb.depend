@@ -1,9 +1,9 @@
 # depslib dependency file v1.0
-1402314956 source:/mnt/c/prj/vdb/vdb.c
+1442847782 source:/mnt/c/prj/vdb/vdb.c
 	"vdb-2.2.c"
 	"vdt-1.0.c"
 
-1402315475 /mnt/c/prj/vdb/vdb-2.2.c
+1442847782 /mnt/c/prj/vdb/vdb-2.2.c
 	"vdb.h"
 	<stdlib.h>
 	<stdio.h>
@@ -12,20 +12,21 @@
 	<dlfcn.h>
 	<link.h>
 
-1402314322 /mnt/c/prj/vdb/vdb.h
+1442847782 /mnt/c/prj/vdb/vdb.h
 	"vtypes.h"
 	<time.h>
 	"windows.h"
 	"u_pb.h"
 	"vds.h"
 
-1400828470 /mnt/c/prj/vos/vtypes.h
+1442847738 /mnt/c/prj/vos/vtypes.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<time.h>
+	<windows.h>
 
-1219378260 /mnt/c/prj/vdb/vdt-1.0.c
+1442847782 /mnt/c/prj/vdb/vdt-1.0.c
 	"vdb.h"
 	<time.h>
 	<stdio.h>
@@ -37,12 +38,12 @@
 	<string.h>
 	<stdio.h>
 
-1402315745 source:/mnt/c/prj/vdb/vdbcon.c
+1455638926 source:/mnt/c/prj/vdb/vdbcon.c
 	"vos.h"
 	"vdb.h"
 	"stdio.h"
 
-1402315256 /mnt/c/prj/vos/vos.h
+1442847738 /mnt/c/prj/vos/vos.h
 	"vtypes.h"
 	<fcntl.h>
 	<netdb.h>
@@ -57,13 +58,13 @@
 	<sql.h>
 	<sqlext.h>
 
-1402315214 source:/mnt/c/prj/vdb/main.c
+1442847782 source:/mnt/c/prj/vdb/main.c
 	<stdio.h>
 	<stdlib.h>
 	"vos.h"
 	"vos.c"
 
-1402310288 /mnt/c/prj/vos/vos.c
+1442847738 /mnt/c/prj/vos/vos.c
 	"vos.h"
 	"pthread.h"
 	"stdlib.h"
@@ -71,8 +72,9 @@
 	<sys/time.h>
 	<stdio.h>
 	<sys/resource.h>
+	"vos_win.c"
 
-1402316814 source:/mnt/c/prj/vdb/vsqlite.c
+1442847782 source:/mnt/c/prj/vdb/vsqlite.c
 	"vdb.h"
 	<sqlite3.h>
 	<time.h>
@@ -80,10 +82,10 @@
 	"coders.h"
 	"vos.h"
 
-1400828435 /mnt/c/prj/vos/coders.h
+1450863980 /mnt/c/prj/vos/coders.h
 	"vtypes.h"
 
-1252654500 source:/mnt/c/prj/vdb/sqlite3/sqlite3.c
+1442847782 source:/mnt/c/prj/vdb/sqlite3/sqlite3.c
 	"config.h"
 	<stdint.h>
 	<inttypes.h>
@@ -123,4 +125,45 @@
 	<unicode/ucol.h>
 	<unicode/ubrk.h>
 	<unicode/utf16.h>
+
+1442847738 /mnt/c/prj/vos/vos_win.c
+	<stdio.h>
+	<stdlib.h>
+	<winsock.h>
+	<time.h>
+	<sys/types.h>
+	<sys/stat.h>
+	"vos.h"
+	<psapi.h>
+	<windows.h>
+
+1455638837 source:/mnt/c/prj/vdb/vdb_upload.c
+	<stdlib.h>
+	"vdb.h"
+	"../vos/vs0.c"
+	"../vos/strutil.c"
+	"../vos/coders.c"
+
+1442847738 /mnt/c/prj/vos/vs0.c
+	<fcntl.h>
+	"vs0.h"
+	"vos.h"
+	<sys/stat.h>
+	<fcntl.h>
+
+1442847738 /mnt/c/prj/vos/vs0.h
+	"vtypes.h"
+	"vss.h"
+
+1442847738 /mnt/c/prj/vos/vss.h
+	"vtypes.h"
+
+1446810009 /mnt/c/prj/vos/strutil.c
+	"coders.h"
+	<stdarg.h>
+
+1442847738 /mnt/c/prj/vos/coders.c
+	"coders.h"
+	<stdarg.h>
+	"vtypes.h"
 

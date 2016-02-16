@@ -14,6 +14,7 @@ fprintf(stderr,"vdbcon <database> [command] ...\n"
 ".help           Show this message\n"
 ".quit           Exit this program\n"
 ".reconnects     Start reconnect leack test\n"
+".upload F T     Uploads file F to table T\n"
 ".stress         Stress test (reconnects & 10 select * from test)\n"
 ".compile        try compile this SQL\n"
 ".btest		 test bind for select * from dual where Dummy = :txt\n"
@@ -21,6 +22,8 @@ fprintf(stderr,"vdbcon <database> [command] ...\n"
 "select ....     executes a select\n");
 return 0;
 }
+
+int vdb_upload(database *db,char *filename, char *tablename);
 
 char cs[1024]; // Last success reconnect
 
@@ -127,6 +130,10 @@ if (strncmp(buf,".compile",8)==0) {
     if (!db_compile(db,sql)) fprintf(stderr,"-err compile: %s\n",db->error);
       else fprintf(stderr,"+ok compiled\n");
     return 1;
+    }
+if (strncmp(buf,".upload",6)==0) {
+     vdb_upload(db,trim(buf+6),0); //"mcc");
+     return 1; // Anyway
     }
 if (strncmp(buf,".sql",4)==0) {
     char *sql = buf+4; int ok;

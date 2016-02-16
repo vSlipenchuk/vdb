@@ -10,3 +10,7 @@ sq3u.so:  vsqlite.c vdb.c
 	
 test:
 	./vdb u/p@test2.db#./sq3u.so
+	
+	
+vdb:	
+	$(CC) vdbcon.c

@@ -40,6 +40,9 @@
 		<Unit filename="vdb.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="vdb_upload.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="vdbcon.c">
 			<Option compilerVar="CC" />
 		</Unit>
