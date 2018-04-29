@@ -15,12 +15,17 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wno-pointer-sign" />
+					<Add option="-static" />
 					<Add directory="../vos" />
+					<Add directory="ora/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
 					<Add library="pthread" />
 					<Add library="dl" />
+					<Add library="ora/libocci.so" />
+					<Add library="ora/libclntsh.so" />
+					<Add library="pthread" />
 				</Linker>
 			</Target>
 		</Build>
@@ -32,6 +37,9 @@
 			<Add library="dl" />
 		</Linker>
 		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ora/ora.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="sqlite3/sqlite3.c">

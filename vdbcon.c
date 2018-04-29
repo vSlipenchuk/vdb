@@ -179,7 +179,8 @@ int sq_connect(database *db , char *host, char *user, char *pass);
 int vdbcon_main(int npar,char **par) {
 //unsigned char *p; int ok;
 
-vdb_static(0,"sqlite",sq_connect); // test for sqlite
+//vdb_static(0,"sqlite",sq_connect); // test for sqlite
+vdb_static(0,"ora",ora_connect); // test for oracle
 
 char buf[1024]; int i;
 #ifdef TESTMODULE

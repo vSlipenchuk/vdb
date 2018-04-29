@@ -1,0 +1,40 @@
+# depslib dependency file v1.0
+1525038576 source:/mnt/c/prj/vdb/ora/ora.c
+	<stdlib.h>
+	<oci.h>
+	<ocidem.h>
+	"../vdb.h"
+	"../vdb.c"
+
+1524991740 /mnt/c/prj/vdb/vdb.h
+	"vtypes.h"
+	<time.h>
+	"windows.h"
+	"u_pb.h"
+	"vds.h"
+
+1524991740 /mnt/c/prj/vdb/vdb.c
+	"vdb-2.2.c"
+	"vdt-1.0.c"
+
+1524991740 /mnt/c/prj/vdb/vdb-2.2.c
+	"vdb.h"
+	<stdlib.h>
+	<stdio.h>
+	<stdarg.h>
+	"windows.h"
+	<dlfcn.h>
+	<link.h>
+
+1524991740 /mnt/c/prj/vdb/vdt-1.0.c
+	"vdb.h"
+	<time.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<stdlib.h>
+	<math.h>
+	<time.h>
+	<string.h>
+	<stdio.h>
+

@@ -96,7 +96,11 @@ if (cashed) for(i=0,d=vdbdll;i<vdbdll_count;i++,d++) if (strcmp(d->name,module)=
      }
 //printf("Try load lib %s\n",module);
 lib=dlopen(module,RTLD_NOW);
-if (!lib) { sprintf(db->error,"vdb load library %s failed",module); return 0;}
+//lib=dlopen(module,RTLD_LAZY);
+
+if (!lib) {
+//   perror();
+   sprintf(db->error,"vdb load library %s failed",module); return 0;}
 p =(void*)GetProcAddress(lib,"prefix");
 if (!p) {  // No prefix function!!!
 	    dlclose(lib);

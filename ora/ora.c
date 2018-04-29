@@ -1,22 +1,24 @@
 // Раппер на Oracle Open Call Interface vdb.1.0
 
 // Включен дебаг-мод!!!
-#include <windows.h>
+//#include <windows.h>
 #include <stdlib.h> // Диспетчер памяти...
 #include <oci.h> // Тут весь оракл лежит... (должна быть в INCLUDE-PATH)
 #include <ocidem.h> // Симолические константы описаний типов...
+#include "../vdb.h"
 
 //#include "vdb.h" // Ссылка на структуры vdb (должна быть в INCLUDE-PATH)
-#include "vdb.c"
+#ifdef _DLL
+#include "../vdb.c"
+#endif
+
+//#define debugf printf
+#define debugf /*IF NO DEBUG */
 
 
-#define debugf printf
-//#define debugf /*IF NO DEBUG */
 
-
-
-#define Version "3.0.11.3"
-#define Description "Oracle 10g vdb driver"
+#define Version "12.0.0.0"
+#define Description "Oracle 12c vdb driver"
 
 #define csid_csfrm ,0,0 /* Need for LobRead till 10i*/
 char szVersion[] = Version;
@@ -90,6 +92,7 @@ typedef struct  {
 int   ora_mutex = 0; OCIEnv *env=0; // Глобальные - на все случаи жизни ...
 
 #ifdef _DLL
+#ifdef WIN
 int mutex_create()
 {
   CRITICAL_SECTION *cs;
@@ -121,12 +124,44 @@ int mutex_destroy(int mutex) {
   free(cs);
   return 0;
 }
+#endif
+
+#ifndef WIN
+// mutex
+#include <pthread.h>
+
+void *mutex_create() { // reenter mutex
+pthread_mutex_t *cs;
+cs = malloc(sizeof(pthread_mutex_t));
+pthread_mutexattr_t    attrs;
+pthread_mutexattr_init(&attrs);
+pthread_mutexattr_settype(&attrs, PTHREAD_MUTEX_RECURSIVE);
+pthread_mutex_init( cs, &attrs );
+return cs;
+}
+
+void mutex_lock(void *mutex) {
+if (mutex) pthread_mutex_lock(mutex);
+}
+
+void mutex_unlock(void *mutex) {
+if (mutex) pthread_mutex_unlock(mutex);
+}
+
+void mutex_destroy(void * mutex) {
+if (!mutex) return ;
+free(mutex); // free mem or do nothing?
+}
+
+#endif
+
+//int _init() { return 0;} --nostartfiles
 
 char *prefix(int version)  {
 if (!ora_mutex)
  { int cnt=0; int mode = /*OCI_DEFAULT*/OCI_THREADED;
  //return 0;
- ora_mutex = mutex_create();
+  ora_mutex = mutex_create();
  //printf("mutex created!\n");
    // Без этой штуки Oracle не хочет работать в потоках!
  if(1) (void) OCIInitialize((ub4)mode, (dvoid *)0,
@@ -141,6 +176,7 @@ if (!ora_mutex)
 return "ora_";
 }
 
+#ifdef WIN
 BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, PVOID fImpLoad) {
 switch (fdwReason)
 {
@@ -164,6 +200,7 @@ return(TRUE);
 // используется только для DLL_PROCESS_ATTACH
 }
 
+#endif
 #endif
 
 #define getch()
@@ -343,6 +380,7 @@ return 1;
 in_command(unsigned char *cmd,char *rep) {
 while(*cmd && *cmd<=32) cmd++; // ltrim;
 if (strcmp(cmd,"version")==0) strcpy(rep,szVersion);
+#ifdef WIN
  else if (strcmp(cmd,"tns")==0) { // edit tnsnames.ora
 	 HKEY K1,K2; int t,l; char tns[512],buf[1024];
          if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SOFTWARE",0,KEY_READ,&K1)!=0) return 0;
@@ -354,6 +392,7 @@ if (strcmp(cmd,"version")==0) strcpy(rep,szVersion);
 	 system(tns);
 	 strcpy(rep,buf);
 	 }
+#endif
  else strcpy(rep,"unknown command");
 return 0;
 }
@@ -697,7 +736,9 @@ db->fetch = ora_fetch;
 db->bind = ora_bind;
 o->envhp=env; // Copy It
 // Инициализиреум envhp - "сессионный набор" (для дальнейшего ЮЗА)
-//OCIEnvInit( (OCIEnv **) &o->envhp, OCI_DEFAULT, (size_t) 0,(dvoid **) 0 );
+
+OCIEnvInit( (OCIEnv **) &o->envhp, OCI_DEFAULT, (size_t) 0,(dvoid **) 0 );
+
 debugf(" ..try connect to oracle {user:'%s',pass:'%s',server:'%s',env:0x%p}\n",username,password,srvname,o->envhp);
 // Инитим обьект типа ошибка Оракл
 OCIHandleAlloc( (dvoid *) o->envhp, (dvoid **) &o->errhp, OCI_HTYPE_ERROR,(size_t) 0, (dvoid **) 0);
@@ -708,6 +749,7 @@ OCIHandleAlloc( (dvoid *) o->envhp, (dvoid **) &o->srvhp, OCI_HTYPE_SERVER,(size
 debugf(".. OCUHandleAlloc srvhp:0x%p, attaching\n", o->srvhp);
 // Следующие две команды совершенно непонятны...
 if (OCI_SUCCESS!=OCIServerAttach( o->srvhp, o->errhp, (text *)srvname, strlen(srvname), OCI_DEFAULT)) {
+ debugf(" -- failed Server Attach");
  ora_error(db);
  ora_disconnect(db);
  return 0;
