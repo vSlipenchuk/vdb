@@ -26,6 +26,7 @@ return 0;
 int vdb_upload(database *db,char *filename, char *tablename);
 
 char cs[1024]; // Last success reconnect
+int mode_csv = 0; // csv mode ON
 
 
 time_t TimeNow;
@@ -99,10 +100,51 @@ printf("text:'%s'\n",db_text(db->out.cols));
 return 1;
 }
 
+int fcsv_text(FILE *f, char *t) { // change-> ", -> to spaces
+fputc('"',f);
+while(*t) {
+ if (strchr("\",",*t)) fputc(' ',f);
+      else fputc(*t,f);
+ t++;
+ }
+fputc('"',f);
+return 1;
+}
 
+int dump_dataset(FILE *f, database *db, int mode) { // mode = 0=Text, 1 - csv
+db_col *c;
+int row=0,i; char txtbuf[80];
+c = db->out.cols;
+switch (mode) {
+case 0: // TEXT
+    for(i=0;i<db->out.count;i++,c++) fprintf(f,"%s%s",c->name,i+1<db->out.count?"\t":"\n");
+    while(db_fetch(db)) {
+       c = db->out.cols;
+       for(i=0;i<db->out.count;i++,c++) fprintf(f,"%s%s",db_text_buf(txtbuf,c),
+         i+1<db->out.count?"\t":"\n");
+       row++;
+       }
+       break;
+case 1: // CSV
+ for(i=0;i<db->out.count;i++,c++) {
+        fcsv_text(f,c->name); fprintf(f,"%s",i+1<db->out.count?",":"\n");
+        }
+    while(db_fetch(db)) {
+       c = db->out.cols;
+       for(i=0;i<db->out.count;i++,c++) {
+         fcsv_text(f,db_text_buf(txtbuf,c)); fprintf(f,"%s",i+1<db->out.count?",":"\n");
+         }
+       row++;
+       }
+       break;
+}
+return row;
+}
+
+FILE *output=0; // default for output
 
 int process(char *buf) {
-unsigned char *p; int ok;
+unsigned char *p=buf; int ok;
 if (strncmp(buf,".connect",7)==0) {
     p=buf+7; while(*p && *p<=32) p++;
     fprintf(stderr," ...connecting to <%s>\n",p);
@@ -111,13 +153,19 @@ if (strncmp(buf,".connect",7)==0) {
       else fprintf(stderr,"-err: %s\n",db->error);
     return 1;
     }
+if (strcmp(buf,".mode csv")==0) { mode_csv=1; return 1;}
 if (strcmp(buf,".help")==0) { prn_help(); return 1;}
 if (strcmp(buf,".reconnects")==0) { do_reconnects(0); return 1;}
 if (strcmp(buf,".stressFetch")==0) { do_stress_fetch("select* from test"); return 1;}
 if (strcmp(buf,".stress")==0) { do_reconnects("select * from test"); return 1;}
 if (strcmp(buf,".btest")==0) { do_binds("select * from dual where dummy = :txt"); return 1;}
+if (lcmp(&p,".output")) {
+    output = fopen(p,"wt");
+    if (!output) { fprintf(stderr,"cant open file %s",p);}
+    return 1;
+    }
 //if (strcmp(buf,".btest")==0) { do_binds("select * from email where sender = :txt"); return 1;}
-if (strcmp(buf,".quit")==0) exit(1);
+if (strcmp(buf,".quit")==0) exit(0);
 if (strcmp(buf,".rollback")==0) {
      printf("rollback code = %d\n",db_rollback(db)); return 1;
     }
@@ -156,17 +204,12 @@ if (strncmp(buf,".desc",5)==0) {
     return 1;
     }
 if (strncmp(buf,"select",6)==0) {
-    db_col *c; int i, row=0; char txtbuf[80];
+    int row=0;
     fprintf(stderr," ...selecting sql <%s>\n",buf);
     if (!db_select(db,buf)) { fprintf(stderr,"-err: %s\n",db->error); return 1;}
-    c = db->out.cols;
-    for(i=0;i<db->out.count;i++,c++) printf("%s%s",c->name,i+1<db->out.count?"\t":"\n");
-    while(db_fetch(db)) {
-       c = db->out.cols;
-       for(i=0;i<db->out.count;i++,c++) printf("%s%s",db_text_buf(txtbuf,c),
-         i+1<db->out.count?"\t":"\n");
-       row++;
-       }
+
+    row = dump_dataset( output?output:stdout, db, mode_csv);
+    if (output) { fclose(output); output=0; }
     fprintf(stderr,"+%d rows selected\n",row);
     return 1;
     }
@@ -179,10 +222,10 @@ int sq_connect(database *db , char *host, char *user, char *pass);
 int vdbcon_main(int npar,char **par) {
 //unsigned char *p; int ok;
 
-//vdb_static(0,"sqlite",sq_connect); // test for sqlite
-vdb_static(0,"ora",ora_connect); // test for oracle
+vdb_static(0,"sqlite",sq_connect); // test for sqlite
+//vdb_static(0,"ora",ora_connect); // test for oracle
 
-char buf[1024]; int i;
+char buf[4*1024],sbuf[200]; int i;
 #ifdef TESTMODULE
 TESTMODULE
 #endif
@@ -199,9 +242,33 @@ for(i=2;i<npar;i++) {
  process(buf);
  }
 while(1) {
- printf("vdb>");  buf[0]=0; gets(buf);
- if (!buf[0]) break;
- process(buf);
+ int l;
+ if (buf[0]) fprintf(stderr,">"); else fprintf(stderr,"vdb>");
+ sbuf[0]=0;
+ if (!fgets(sbuf,sizeof(sbuf),stdin)) break; // EOF
+ if (!sbuf[0]) break;
+ l=strlen(sbuf);
+ while(l>0 && (strchr("\r\n",sbuf[l-1]) )) l--;
+ if (buf[0] ==0 && l==0) break; // empty line in a middle
+ if ((sbuf[0]=='.') && (buf[0]==0)) { // one line command
+    sbuf[l]=0;
+    process(sbuf);
+    }
+ else {
+    l = strlen(buf)+strlen(sbuf);
+    if (l+1>=sizeof(buf)) {
+       fprintf(stderr,"too long command max:%ld\n",sizeof(buf));
+       exit(2);
+       }
+    strcat(buf,sbuf);
+    while(l>0 && (strchr("\r\n",buf[l-1]) )) l--; // rtrim
+    //printf("NEWBUF:%s\n",buf);
+    if ( l > 0 && buf[l-1]==';') { // ok - last here
+       buf[l-1]=0;
+       process(buf);
+       buf[0]=0;
+       }
+    }
  }
 return 0;
 }

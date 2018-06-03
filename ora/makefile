@@ -18,4 +18,7 @@ vora12c.so: ora.c
 
 
 test:	
-		../vdb vovka/mypass@x201#./vora12c.so
+		../vdb vovka/password@x201#./vora12c.so ".mode csv" "select * from dual" ".quit"
+		
+test2:	
+		../vdb vovka/password@x201#./vora12c.so ".mode csv" ".output at.csv" "select * from all_tables" ".quit"

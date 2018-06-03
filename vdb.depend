@@ -3,7 +3,7 @@
 	"vdb-2.2.c"
 	"vdt-1.0.c"
 
-1525039965 /mnt/c/prj/vdb/vdb-2.2.c
+1525041042 /mnt/c/prj/vdb/vdb-2.2.c
 	"vdb.h"
 	<stdlib.h>
 	<stdio.h>
@@ -38,7 +38,7 @@
 	<string.h>
 	<stdio.h>
 
-1525037919 source:/mnt/c/prj/vdb/vdbcon.c
+1528059438 source:/mnt/c/prj/vdb/vdbcon.c
 	"vos.h"
 	"vdb.h"
 	"stdio.h"
@@ -184,12 +184,13 @@
 	<stdarg.h>
 	"vtypes.h"
 
-1525040214 source:/mnt/c/prj/vdb/ora/ora.c
+1525041231 source:/mnt/c/prj/vdb/ora/ora.c
 	<stdlib.h>
 	<oci.h>
 	<ocidem.h>
 	"../vdb.h"
 	"../vdb.c"
+	<pthread.h>
 
 1485436490 /mnt/c/prj/vdb/ora/include/oci.h
 	<oratypes.h>
