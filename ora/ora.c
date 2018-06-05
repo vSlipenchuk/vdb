@@ -249,12 +249,12 @@ t_ora *o = db->h;
 db_col *c;
 int i;
 if (!o) return ora_error(db);
-if (!o->execnum)
- {
- o->execnum = 1;
+//if (!o->execnum)
+// {
+// o->execnum = 1;
  if (!ora_check_bind(db)) return 0; // Если первый раз - подвязать переменные...
- }
-debugf(" ..ora10 - check bind ok!\n");
+// }
+debugf(" ..ora - check bind ok!\n");
 o->execnum++; // Номер запуска exec...
 for(i=0,c=db->in.cols;i<db->in.count;i++,c++) if ((c->dbflag & 2)==0) { // Все ин-параметры
    if(c->type==dbDate) // Перекодируем дату
@@ -292,6 +292,7 @@ for(i=0,c=db->in.cols;i<db->in.count;i++,c++) if ((c->dbflag & 2)==0) { // Все и
    }
   }
   }
+debugf(" ..ora - begin OCIStmtExecute stmt=%p!\n",o->stmt);
 db->err_code = OCIStmtExecute(o->svchp, o->stmt, o->errhp, (ub4) 1, (ub4) 0,
                (CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,OCI_DEFAULT);
 debugf("ORARES on exec = %d\n",db->err_code);

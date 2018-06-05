@@ -23,9 +23,8 @@
 					<Add option="-s" />
 					<Add library="pthread" />
 					<Add library="dl" />
-					<Add library="ora/libocci.so" />
 					<Add library="ora/libclntsh.so" />
-					<Add library="pthread" />
+					<Add library="ora/libocci.so" />
 				</Linker>
 			</Target>
 		</Build>

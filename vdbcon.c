@@ -9,24 +9,45 @@
 
 database *db = 0;
 
+uchar *get_word(uchar **str);
+int lcmp(uchar **str,uchar *cmp);
+uchar *get_col(uchar **row);
+
+int vdb_upload(database *db,char *filename, char *tablename,char* (*next_col)(char**) ); // .import handler
+
 int prn_help() {
 fprintf(stderr,"vdbcon <database> [command] ...\n"
 ".help           Show this message\n"
 ".quit           Exit this program\n"
-".reconnects     Start reconnect leack test\n"
-".upload F T     Uploads file F to table T\n"
+".import F T     Uploads file F to table T\n"
+".mode csv|text  Set import/output format\n"
+".output F       Output select results to a file\n"
 ".stress         Stress test (reconnects & 10 select * from test)\n"
 ".compile        try compile this SQL\n"
 ".btest		 test bind for select * from dual where Dummy = :txt\n"
+".reconnects     Start reconnect leack test\n"
 ".sql ...    compile & exec sql"
 "select ....     executes a select\n");
 return 0;
 }
 
-int vdb_upload(database *db,char *filename, char *tablename);
+//select name FROM my_db.sqlite_master WHERE type='table';
+//select name FROM sqlite_master WHERE type='table';
+
+int vdb_upload(database *db,char *filename, char *tablename,char* (*next_col)(char**) );
+//char *get_col(char **);
+
+uchar *get_till(uchar **data,uchar *del,int dl);
+
+char *get_csv_col(char **row) {
+char *r = get_till(row,",",1); // split it
+int l = strlen(r);
+if (l>=2 && r[0]=='\"' && r[l-1]=='\"') { r[l-1]=0; r++; }
+return r;
+}
 
 char cs[1024]; // Last success reconnect
-int mode_csv = 0; // csv mode ON
+int mode = 0;  //  TEXT:0,CSV:1
 
 
 time_t TimeNow;
@@ -51,7 +72,7 @@ for(i=0;i<100*10000;i++) {
  m2 = os_mem_used(); t2 = TimeNow;
  skip = t2!=t1; // New Second
  if (skip || (i%100 ==0))
-   printf(" .. stress_fetch: %d mem_used: %d KB  delta= %d Bytes time=%d fetched:%d \r",i,m2/1024, (m2-m1), (t2-t1),(p2-p1));
+   printf(" .. stress_fetch: %d mem_used: %d KB  delta= %d Bytes time=%d fetched:%d \r",i,m2/1024, (m2-m1), (int)(t2-t1),(p2-p1));
  if (skip) {
       m1=m2; t1 = t2; p1=p2; printf("\n");
       }
@@ -62,10 +83,14 @@ return 0;
 
 int do_reconnects(char *sql) {
 int m0, m1, m2 = 0, i;
+
+//sql="select table_name from all_tables";
+
 m0 =  m1 = os_mem_used();
 //int do_smth=0;
 //fprintf(stderr," start reconnects with mem %d  KB\n", m1/1024);
-for(i=0;i<100*1000;i++) {
+for(i=1;i<100*1000;i++) {
+ db_done(db); // clear prev
  if (!db_connect_string(db,cs)) {
    fprintf(stderr,"-reconnect failed on %d step err=%s\n",i,db->error);
    msleep(1000); continue;
@@ -79,7 +104,7 @@ if (sql) {
  //while(db_fetch(db)); // Fetch all
  }
  m2 = os_mem_used();
- printf(" .. reconnect: %d mem_used: %d KB  delta= %d Bytes  \r",i,m2/1024, (m2-m1));
+ printf(" .. reconnect: %d mem_used: %d KB  delta= %d Bytes          \r",i,m2/1024, (m2-m1));
  if (i%100==0) { m1=m2; printf("\n"); }
  }
 fprintf(stderr,"+%d reconnects done, leak: %d\n",i, (m2-m0));
@@ -115,6 +140,7 @@ int dump_dataset(FILE *f, database *db, int mode) { // mode = 0=Text, 1 - csv
 db_col *c;
 int row=0,i; char txtbuf[80];
 c = db->out.cols;
+if (!f) f=stdout;
 switch (mode) {
 case 0: // TEXT
     for(i=0;i<db->out.count;i++,c++) fprintf(f,"%s%s",c->name,i+1<db->out.count?"\t":"\n");
@@ -153,7 +179,13 @@ if (strncmp(buf,".connect",7)==0) {
       else fprintf(stderr,"-err: %s\n",db->error);
     return 1;
     }
-if (strcmp(buf,".mode csv")==0) { mode_csv=1; return 1;}
+if (lcmp(&p,".mode")) {
+      unsigned char *m=get_word(&p);
+      if ( lcmp(&m,"csv"))  { mode=1; fprintf(stderr,"+mode  csv now\n"); return 1;}
+      if ( lcmp(&m,"text")) { mode=0; fprintf(stderr,"+mode  text now\n"); return 1;}
+      fprintf(stderr,"ERR: mode %s unknown\n",m);
+      return 2;
+      }
 if (strcmp(buf,".help")==0) { prn_help(); return 1;}
 if (strcmp(buf,".reconnects")==0) { do_reconnects(0); return 1;}
 if (strcmp(buf,".stressFetch")==0) { do_stress_fetch("select* from test"); return 1;}
@@ -179,9 +211,12 @@ if (strncmp(buf,".compile",8)==0) {
       else fprintf(stderr,"+ok compiled\n");
     return 1;
     }
-if (strncmp(buf,".upload",6)==0) {
-     vdb_upload(db,trim(buf+6),0); //"mcc");
-     return 1; // Anyway
+if (lcmp(&p,".import")) {
+     char *file = get_word(&p);
+     char *tbl  = get_word(&p);
+     if (mode==0) return vdb_upload(db,file,tbl,get_col);
+        else return vdb_upload(db,file,tbl,get_csv_col);
+
     }
 if (strncmp(buf,".sql",4)==0) {
     char *sql = buf+4; int ok;
@@ -207,8 +242,8 @@ if (strncmp(buf,"select",6)==0) {
     int row=0;
     fprintf(stderr," ...selecting sql <%s>\n",buf);
     if (!db_select(db,buf)) { fprintf(stderr,"-err: %s\n",db->error); return 1;}
-
-    row = dump_dataset( output?output:stdout, db, mode_csv);
+    fprintf(stderr,"begin output=%p mode=%d\n",output,mode);
+    row = dump_dataset( output, db, mode);
     if (output) { fclose(output); output=0; }
     fprintf(stderr,"+%d rows selected\n",row);
     return 1;
@@ -218,12 +253,13 @@ return 1;
 }
 
 int sq_connect(database *db , char *host, char *user, char *pass);
+int vdb_static(void* lib,char *name,int (*connect)());
 
 int vdbcon_main(int npar,char **par) {
 //unsigned char *p; int ok;
 
-vdb_static(0,"sqlite",sq_connect); // test for sqlite
-//vdb_static(0,"ora",ora_connect); // test for oracle
+//vdb_static(0,"sqlite",sq_connect); // test for sqlite
+vdb_static(0,"ora",ora_connect); // test for oracle
 
 char buf[4*1024],sbuf[200]; int i;
 #ifdef TESTMODULE
@@ -241,6 +277,7 @@ for(i=2;i<npar;i++) {
  if (!buf[0]) exit(0);
  process(buf);
  }
+buf[0]=0;
 while(1) {
  int l;
  if (buf[0]) fprintf(stderr,">"); else fprintf(stderr,"vdb>");

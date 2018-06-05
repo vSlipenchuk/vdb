@@ -71,8 +71,9 @@ enum {dbUnknown,dbInt,dbNumber,dbDate,dbChar,dbBlob};
 enum {dbConnect,dbDisconnect, dbCommit,dbRollback,
       dbCompile,dbOpen, dbFetch,dbExec};
 
-#define DB_STEP_COL    100
-#define DB_STEP_BUFFER 30*1024 /* 30k peiece slices */
+
+#define DB_STEP_COL    256
+#define DB_STEP_BUFFER 300*1024 /* 30k peiece slices */
 #define DB_MAX_ERROR   512
 #define DB_MAX_NAME    32*4
 
