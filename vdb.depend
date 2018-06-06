@@ -38,10 +38,11 @@
 	<string.h>
 	<stdio.h>
 
-1528233739 source:/mnt/c/prj/vdb/vdbcon.c
+1528319837 source:/mnt/c/prj/vdb/vdbcon.c
 	"vos.h"
 	"vdb.h"
 	"stdio.h"
+	"vos_linux_kbhit.c"
 
 1508660137 /mnt/c/prj/vos/vos.h
 	"vtypes.h"
@@ -285,4 +286,71 @@
 1524991740 /mnt/c/prj/vdb/vdb.c
 	"vdb-2.2.c"
 	"vdt-1.0.c"
+
+1528320581 source:/mnt/c/prj/vdb/vdb_http.c
+	"vdb.h"
+	"logger.c"
+	"std_sock.c"
+	"exe.c"
+	"sock.c"
+	"httpSrv.c"
+	"vss.c"
+
+1508660137 /mnt/c/prj/vos/logger.c
+	"logger.h"
+	<time.h>
+	<stdarg.h>
+	"vos.h"
+
+1508660137 /mnt/c/prj/vos/logger.h
+	"vs0.h"
+	<stdio.h>
+	<time.h>
+	"coders.h"
+
+1508794926 /mnt/c/prj/vos/std_sock.c
+	"vos.h"
+	"vtypes.h"
+	<sys/stat.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+
+1508660137 /mnt/c/prj/vos/exe.c
+	"vtypes.h"
+	"coders.h"
+	"vos.h"
+
+1508660137 /mnt/c/prj/vos/sock.c
+	"sock.h"
+	<stdarg.h>
+
+1508660137 /mnt/c/prj/vos/sock.h
+	"vos.h"
+	"vs0.h"
+	"vss.h"
+	"logger.h"
+	"vtypes.h"
+
+1508660137 /mnt/c/prj/vos/httpSrv.c
+	"httpSrv.h"
+	<stdarg.h>
+	<fcntl.h>
+	<dirent.h>
+
+1508660137 /mnt/c/prj/vos/httpSrv.h
+	"vos.h"
+	"sock.h"
+	"vss.h"
+
+1508660137 /mnt/c/prj/vos/vss.c
+	"vss.h"
+	"vos.h"
+
+1508660137 /mnt/c/prj/vos/vos_linux_kbhit.c
+	"vos.h"
+	<termios.h>
+	<stropts.h>
+	<stdio.h>
+	<sys/ioctl.h>
 

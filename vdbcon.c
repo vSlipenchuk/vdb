@@ -136,11 +136,74 @@ fputc('"',f);
 return 1;
 }
 
+int csv_cat(char *t,int (*cat)(),void *p) { // change-> ", -> to spaces
+cat(p,"\"",1);
+while(*t) {
+ if (strchr("\",",*t)) cat(p," ",1);
+      else cat(p,t,1);
+ t++;
+ }
+cat(p,"\"",1);
+return 1;
+}
+
+int dump_dataset_cb(database *db, int mode,int (*cat)(),void *p ) { // mode = 0=Text, 1 - csv
+db_col *c;
+int row=0,i; char txtbuf[80];
+c = db->out.cols;
+switch (mode) {
+case 0: // TEXT
+    for(i=0;i<db->out.count;i++,c++) { cat(p,c->name,-1); cat(p,(i+1<db->out.count?"\t":"\n"),1); }
+    while(db_fetch(db)) {
+       c = db->out.cols;
+       for(i=0;i<db->out.count;i++,c++) {cat(p,db_text_buf(txtbuf,c),-1); cat(p,(i+1<db->out.count?"\t":"\n"),1);}
+       //fprintf(f,"%s%s",db_text_buf(txtbuf,c),
+       row++;
+       }
+       break;
+case 1: // CSV
+ for(i=0;i<db->out.count;i++,c++) {
+        //fcsv_text(f,c->name); fprintf(f,"%s",i+1<db->out.count?",":"\n"); // ZZZU
+        csv_cat(c->name,cat,p); cat(p,(i+1<db->out.count?",":"\n"),1);
+        }
+    while(db_fetch(db)) {
+       c = db->out.cols;
+       for(i=0;i<db->out.count;i++,c++) {
+         //fcsv_text(f,db_text_buf(txtbuf,c)); fprintf(f,"%s",i+1<db->out.count?",":"\n");
+         csv_cat(db_text_buf(txtbuf,c),cat,p); cat(p,(i+1<db->out.count?",":"\n"),1);
+         }
+       row++;
+       }
+       break;
+}
+return row;
+}
+
+int dump2file(FILE *f,char *data,int len) {
+if (len<0) len=strlen(data);
+return fwrite(data,len,1,f);
+}
+
+int _dump2str(char **s,char *data,int len) {
+strCat(s,data,len);
+return 1;
+}
+
+int dump_dataset2str(char **str,database *db,int mode) {
+return dump_dataset_cb(db,mode,_dump2str,str);
+}
+
+
 int dump_dataset(FILE *f, database *db, int mode) { // mode = 0=Text, 1 - csv
 db_col *c;
 int row=0,i; char txtbuf[80];
 c = db->out.cols;
 if (!f) f=stdout;
+
+return dump_dataset_cb(db,mode,dump2file,f);
+/*
+
+
 switch (mode) {
 case 0: // TEXT
     for(i=0;i<db->out.count;i++,c++) fprintf(f,"%s%s",c->name,i+1<db->out.count?"\t":"\n");
@@ -165,6 +228,7 @@ case 1: // CSV
        break;
 }
 return row;
+*/
 }
 
 FILE *output=0; // default for output
@@ -186,6 +250,18 @@ if (lcmp(&p,".mode")) {
       fprintf(stderr,"ERR: mode %s unknown\n",m);
       return 2;
       }
+if (lcmp(&p,".http")) { // start http server
+      int code = vdb_http_start();
+      fprintf(stderr,"+server started code=%d\n",code);
+      return 1;
+      //vdb_http_process();
+      }
+if (lcmp(&p,"url")) {
+      char *u = get_word(&p); // rest is SQL
+      http_addSQL(u,p);
+      fprintf(stderr,"url %s added to map\n",u);
+      return 1;
+    }
 if (strcmp(buf,".help")==0) { prn_help(); return 1;}
 if (strcmp(buf,".reconnects")==0) { do_reconnects(0); return 1;}
 if (strcmp(buf,".stressFetch")==0) { do_stress_fetch("select* from test"); return 1;}
@@ -255,6 +331,8 @@ return 1;
 int sq_connect(database *db , char *host, char *user, char *pass);
 int vdb_static(void* lib,char *name,int (*connect)());
 
+#include "vos_linux_kbhit.c"
+
 int vdbcon_main(int npar,char **par) {
 //unsigned char *p; int ok;
 
@@ -282,6 +360,7 @@ while(1) {
  int l;
  if (buf[0]) fprintf(stderr,">"); else fprintf(stderr,"vdb>");
  sbuf[0]=0;
+ while (!kbhit()) { if (vdb_http_process()<1) msleep(100); }
  if (!fgets(sbuf,sizeof(sbuf),stdin)) break; // EOF
  if (!sbuf[0]) break;
  l=strlen(sbuf);
