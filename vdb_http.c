@@ -23,7 +23,7 @@ int logLevel = 1;
 int keepAlive = 1;
 int runTill = 0;
 char *rootDir = "./";
-char *mimes=".htm,.html=text/html;charset=utf8&.js=text/javascript;charset=utf8";
+char *mimes=".htm,.html=text/html;charset=utf8&.js=text/javascript;charset=utf8&.css=text/css";
 int i,Limit=1000000;
 httpSrv *srv ; // my server
 
@@ -51,6 +51,35 @@ extern database *db; // defined in vcon - need output to sting?
 
 int dump_dataset2str(char **str,database *db,int mode);
 
+int db_sql_process(database *db, vss p, char *sql,char **out) {
+if (!sql) sql="";
+int ok = db_compile(db,sql);
+   printf("Compile=%d SQL:%s\n",ok,sql);
+if (!ok) return 0;
+   while(p.len>0) {
+     vss v=vssGetTillStr(&p,"&",1,1);
+     vss n=vssGetTillStr(&v,"=",1,1);
+     n.data[n.len]=0; v.data[v.len]=0;
+     printf("ARG %s VAL=%s\n",n.data,v.data);
+     //int db_bind(database *db,char *name,int type,int *index,void *data,int len);
+     if (!db_bind(db,n.data,dbChar,0,v.data,v.len)) printf("bind %s error %s\n",n,db->error);
+     }
+   ok = db_open(db) && db_exec(db);
+   if (!ok) { printf("DBERR:%s\n",db->error); return 1;}
+
+   ok = ok && dump_dataset2str(&srv->buf,db,2); // get jso
+return 1; // ok
+}
+
+int onHttpSql(Socket *sock, vssHttp *req, SocketMap *map) {
+strSetLength(&srv->buf,0); // ClearResulted
+char *sql=req->B.data;
+strSetLength(&srv->buf,0); // ClearResulted
+int  ok = db_sql_process(db,req->args,req->B.data,&srv->buf);
+ SocketSendHttp(sock,req, srv->buf,strlen(srv->buf)) ;
+return 1; // OK - generated
+}
+
 int onHttpDb(Socket *sock, vssHttp *req, SocketMap *map) {
 char buf[1024];
 httpSrv *srv = sock->pool;
@@ -58,23 +87,8 @@ strSetLength(&srv->buf,0); // ClearResulted
 SocketMap *m = SocketMapFind(dbmap,&req->page);
 if (!m) SocketPrintHttp(sock,req,"404 - Request: page:<%*.*s> args:<%*.*s>",VSS(req->page),VSS(req->args));
   else {
-   // process here real results ...
-   vss p = req->args; vss n,v; // get all params...
-   int ok = db_compile(db,m->data);
-   printf("Compile=%d\n",ok);
-   while(p.len>0) {
-     v=vssGetTillStr(&p,"&",1,1);
-     n=vssGetTillStr(&v,"=",1,1);
-     n.data[n.len]=0; v.data[v.len]=0;
-     printf("ARG %s VAL=%s\n",n.data,v.data);
-     //int db_bind(database *db,char *name,int type,int *index,void *data,int len);
-     if (!db_bind(db,n.data,dbChar,0,v.data,v.len)) printf("bind %s error %s\n",n,db->error);
-     }
-   ok = db_open(db) && db_exec(db) && dump_dataset2str(&srv->buf,db,1); // get text
-   //printf("SEND %d bytes->%s\n",strlen(srv->buf),srv->buf);
+   int ok = db_sql_process(db,req->args,m->data,&srv->buf);
    SocketSendHttp(sock,req, srv->buf,strlen(srv->buf)) ;
-   /// SocketPrintHttp(sock,req,"RUN SQL: page:<%*.*s> args:<%*.*s> SQL:%s",VSS(req->page),VSS(req->args),m->data); // Flash Results as http
-   //int SocketSendHttp(Socket *sock, vssHttp *req, uchar *data, int len) {
    }
 return 1; // OK - generated
 }
@@ -116,6 +130,7 @@ httpSrvAddMimes(srv,mimes);
 //httpSrvAddFS(srv,"/c/","c:/",0); // Adding some FS mappings
 httpSrvAddFS(srv,"/",rootDir,0); // Adding some FS mappings
 httpSrvAddMap(srv, strNew("/.stat",-1), onHttpStat, 0);
+httpSrvAddMap(srv, strNew("/.sql",-1), onHttpSql, 0);
 httpSrvAddMap(srv, strNew("/.db",-1), onHttpDb, 0);
 
  //http_addSQL("/all_tables","select * from all_tables"); // {

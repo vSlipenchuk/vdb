@@ -175,6 +175,26 @@ case 1: // CSV
        row++;
        }
        break;
+case 2: // JSON
+        //for(i=0;i<db->out.count;i++,c++) {
+        //fcsv_text(f,c->name); fprintf(f,"%s",i+1<db->out.count?",":"\n"); // ZZZU
+        //csv_cat(c->name,cat,p); cat(p,(i+1<db->out.count?",":"\n"),1);
+        //}
+    row=0;
+    while(db_fetch(db)) {
+       c = db->out.cols;
+       if (row) cat(p,",\n",2); // before second an other rows
+       cat(p,"{",1);
+       for(i=0;i<db->out.count;i++,c++) {
+         //fcsv_text(f,db_text_buf(txtbuf,c)); fprintf(f,"%s",i+1<db->out.count?",":"\n");
+         csv_cat(c->name,cat,p); cat(p,":",1); csv_cat(db_text_buf(txtbuf,c),cat,p);  // "NAME":"VALUE"
+         if (i<db->out.count-1) cat(p,",",1);
+         }
+       cat(p,"}",1);
+       row++;
+       }
+     if (row) cat(p,"\n",1);
+       break;
 }
 return row;
 }
@@ -247,6 +267,7 @@ if (lcmp(&p,".mode")) {
       unsigned char *m=get_word(&p);
       if ( lcmp(&m,"csv"))  { mode=1; fprintf(stderr,"+mode  csv now\n"); return 1;}
       if ( lcmp(&m,"text")) { mode=0; fprintf(stderr,"+mode  text now\n"); return 1;}
+      if ( lcmp(&m,"json")) { mode=2; fprintf(stderr,"+mode  json now\n"); return 1;}
       fprintf(stderr,"ERR: mode %s unknown\n",m);
       return 2;
       }
