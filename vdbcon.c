@@ -253,14 +253,69 @@ return row;
 
 FILE *output=0; // default for output
 
+int process(char *buf);
+
+int process_file(FILE *f) {
+char buf[4*1024],sbuf[200]; int i;
+buf[0]=sbuf[0]=0;
+while(1) {
+ int l;
+ if (f==stdin) {
+    if (buf[0]) fprintf(stderr,">"); else fprintf(stderr,"vdb>");
+    }
+ sbuf[0]=0;
+ if (f==stdin) while (!kbhit()) { if (vdb_http_process()<1) msleep(100); } // allow keyboard input
+ if (!fgets(sbuf,sizeof(sbuf),f)) break; // EOF
+ //printf("R:<%s>\n",sbuf);
+ if (!sbuf[0]) break;
+ l=strlen(sbuf);
+ while(l>0 && (strchr("\r\n",sbuf[l-1]) )) l--;
+ if (buf[0] ==0 && l==0) break; // empty line in a middle
+ if ( strchr(".@",sbuf[0]) && (buf[0]==0)) { // one line command
+    sbuf[l]=0;
+    process(sbuf);
+    }
+ else {
+    l = strlen(buf)+strlen(sbuf);
+    if (l+1>=sizeof(buf)) {
+       fprintf(stderr,"too long command max:%ld\n",sizeof(buf));
+       exit(2);
+       }
+    strcat(buf,sbuf);
+    while(l>0 && (strchr("\r\n",buf[l-1]) )) l--; // rtrim
+    //printf("NEWBUF:%s\n",buf);
+    if ( l > 0 && buf[l-1]==';') { // ok - last here
+       buf[l-1]=0;
+       process(buf);
+       buf[0]=0;
+       }
+    }
+ }
+return 1;
+}
+
 int process(char *buf) {
 unsigned char *p=buf; int ok;
+//printf("P:{%s}\n",buf);
 if (strncmp(buf,".connect",7)==0) {
     p=buf+7; while(*p && *p<=32) p++;
     fprintf(stderr," ...connecting to <%s>\n",p);
     ok = db_connect_string(db,p);
     if (ok) fprintf(stderr,"+connected\n");
       else fprintf(stderr,"-err: %s\n",db->error);
+    return 1;
+    }
+if (p[0]=='@') { // process file
+    p++;
+    printf("try run <%s>\n",p);
+    FILE *f = fopen(p,"rt");
+    if (!f) { fprintf(stderr,"fail open script %s\n",p); return 1;}
+       process_file(f);
+    fclose(f);
+    return 1; // OK
+    }
+if (lcmp(&p,".echo")) {
+    fprintf(stderr,"%s\n",p);
     return 1;
     }
 if (lcmp(&p,".mode")) {
@@ -337,9 +392,9 @@ if (strncmp(buf,".desc",5)==0) {
     }
 if (strncmp(buf,"select",6)==0) {
     int row=0;
-    fprintf(stderr," ...selecting sql <%s>\n",buf);
+    //fprintf(stderr," ...selecting sql <%s>\n",buf);
     if (!db_select(db,buf)) { fprintf(stderr,"-err: %s\n",db->error); return 1;}
-    fprintf(stderr,"begin output=%p mode=%d\n",output,mode);
+   // fprintf(stderr,"begin output=%p mode=%d\n",output,mode);
     row = dump_dataset( output, db, mode);
     if (output) { fclose(output); output=0; }
     fprintf(stderr,"+%d rows selected\n",row);
@@ -358,9 +413,9 @@ int vdbcon_main(int npar,char **par) {
 //unsigned char *p; int ok;
 
 //vdb_static(0,"sqlite",sq_connect); // test for sqlite
-vdb_static(0,"ora",ora_connect); // test for oracle
+vdb_static(0,"vora",ora_connect); // test for oracle
 
-char buf[4*1024],sbuf[200]; int i;
+
 #ifdef TESTMODULE
 TESTMODULE
 #endif
@@ -370,13 +425,17 @@ if (!db_connect_string(db,cs)) {
   fprintf(stderr,"-ErrOnConnect: %s\n",db->error);
   return 2;
   }
+int i;
 fprintf(stderr,"+vdb connected '%s'\n",cs);
 for(i=2;i<npar;i++) {
- strcpy(buf,par[i]);
- if (!buf[0]) exit(0);
- process(buf);
+ //strcpy(buf,par[i]);
+ //if (!buf[0]) exit(0);
+ //process(buf);
+ process(par[i]);
  }
-buf[0]=0;
+//buf[0]=0;
+process_file(stdin);
+/*
 while(1) {
  int l;
  if (buf[0]) fprintf(stderr,">"); else fprintf(stderr,"vdb>");
@@ -407,5 +466,6 @@ while(1) {
        }
     }
  }
+ */
 return 0;
 }

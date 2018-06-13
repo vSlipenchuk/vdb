@@ -53,6 +53,10 @@ int dump_dataset2str(char **str,database *db,int mode);
 
 int db_sql_process(database *db, vss p, char *sql,char **out) {
 if (!sql) sql="";
+if (strncmp(sql,"select",6)!=0) { // return as static text
+   strCat(out,sql,-1); // just flash as static text
+   return 1; // OK
+   }
 int ok = db_compile(db,sql);
    printf("Compile=%d SQL:%s\n",ok,sql);
 if (!ok) return 0;
@@ -79,13 +83,25 @@ int  ok = db_sql_process(db,req->args,req->B.data,&srv->buf);
  SocketSendHttp(sock,req, srv->buf,strlen(srv->buf)) ;
 return 1; // OK - generated
 }
+char *fileSQL = 0; // tmp for load SQL from a file
 
 int onHttpDb(Socket *sock, vssHttp *req, SocketMap *map) {
 char buf[1024];
 httpSrv *srv = sock->pool;
 strSetLength(&srv->buf,0); // ClearResulted
 SocketMap *m = SocketMapFind(dbmap,&req->page);
-if (!m) SocketPrintHttp(sock,req,"404 - Request: page:<%*.*s> args:<%*.*s>",VSS(req->page),VSS(req->args));
+if (!m) { // try find in local dir
+   sprintf(buf,".db/%*.*s",VSS(req->page));
+   printf("Find Local File: %s...\n",buf);
+   strClear(&fileSQL);
+   if (!strCatFile(&fileSQL,buf)) { // no local file
+      SocketPrintHttp(sock,req,"404 - Request: page:<%*.*s> args:<%*.*s>",VSS(req->page),VSS(req->args));
+      return 1;
+      }
+   printf("SQL loaded: %s\n",fileSQL);
+   int ok = db_sql_process(db,req->args,fileSQL,&srv->buf);
+   SocketSendHttp(sock,req, srv->buf,strlen(srv->buf)) ;
+   }
   else {
    int ok = db_sql_process(db,req->args,m->data,&srv->buf);
    SocketSendHttp(sock,req, srv->buf,strlen(srv->buf)) ;
@@ -130,8 +146,8 @@ httpSrvAddMimes(srv,mimes);
 //httpSrvAddFS(srv,"/c/","c:/",0); // Adding some FS mappings
 httpSrvAddFS(srv,"/",rootDir,0); // Adding some FS mappings
 httpSrvAddMap(srv, strNew("/.stat",-1), onHttpStat, 0);
-httpSrvAddMap(srv, strNew("/.sql",-1), onHttpSql, 0);
-httpSrvAddMap(srv, strNew("/.db",-1), onHttpDb, 0);
+httpSrvAddMap(srv, strNew("/.sql",-1), onHttpSql, 0); // debug SQL messages
+httpSrvAddMap(srv, strNew("/.db",-1), onHttpDb, 0);   // map to local handlers
 
  //http_addSQL("/all_tables","select * from all_tables"); // {
 

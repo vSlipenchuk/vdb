@@ -304,14 +304,54 @@ int db_connect4(database *db, char *dll, char *server, char *user, char *pass) {
   if(!db_init(db,dll)) return 0; return db_connect(db,server,user,pass);
 }
 
+#ifndef BUF_FMT
+#define BUF_FMT(buf,fmt) {va_list va; va_start(va,fmt); vsnprintf((char*)buf,sizeof(buf)-1,(char*)fmt,va); buf[sizeof(buf)-1]=0; va_end(va);}
+#endif
+
+int db_errorf(database *db,char *fmt, ... ) {
+BUF_FMT(db->error,fmt);
+return 0;
+}
+
+#ifdef __linux__
+#include <limits.h>
+int db_connect_alias(database *db,char *cs) {
+FILE *f; char buf[500];
+char *hosts=".vdb.hosts";
+f=fopen(hosts,"rt"); // try local dir
+if (!f) { // try home dir
+        sprintf(buf,"%s/%s",getenv ("HOME"),hosts);
+        f=fopen(buf,"rt");
+        }
+if (!f) { // try global /etc
+        sprintf(buf,"/etc/%s",hosts);
+        f=fopen(buf,"rt");
+        }
+if (!f) return db_errorf(db,".vdb.hosts - not found in ./ or ~/ or /etc)");
+int l=strlen(cs);
+while(fgets(buf,sizeof(buf),f)) { // read line by line
+  if (strncmp(buf,cs,l)==0) { // found!
+     fclose(f);
+     cs=buf+l; while(*cs && (*cs==' ')) cs++; // ltrim
+     l=strlen(cs); while(l>0 && strchr(" \r\n",cs[l-1])) l--; // rtrim
+     cs[l]=0;
+     return db_connect_string(db,cs);
+     }
+  }
+fclose(f);
+return db_errorf(db,"alias %s not found",cs);
+}
+#endif
 
 int db_connect_string(database *db, char *str) {
-  char *p,*s,*d,u[80];
+  char *p,*s,*d,u[300];
 	//printf("Connecting %s\n",str);
 #ifdef MSWIN
   if (str[0]=='.') return db_connect_reg2(db,str+1);
+#else
+  if (str[0]=='.') return db_connect_alias(db,str+1);
 #endif
-  strncpy(u,str,79); u[79]=0;
+  strncpy(u,str,sizeof(u)); u[sizeof(u)-1]=0;
   db_done(db);
   if(!(s=strchr(u,'@'))){ sprintf(db->error,"- server undefined");   return 0;}
   *s=0; s++;

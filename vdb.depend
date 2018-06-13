@@ -3,7 +3,7 @@
 	"vdb-2.2.c"
 	"vdt-1.0.c"
 
-1525041042 /mnt/c/prj/vdb/vdb-2.2.c
+1528922455 /mnt/c/prj/vdb/vdb-2.2.c
 	"vdb.h"
 	<stdlib.h>
 	<stdio.h>
@@ -11,15 +11,16 @@
 	"windows.h"
 	<dlfcn.h>
 	<link.h>
+	<limits.h>
 
-1528233911 /mnt/c/prj/vdb/vdb.h
+1528921955 /mnt/c/prj/vdb/vdb.h
 	"vtypes.h"
 	<time.h>
 	"windows.h"
 	"u_pb.h"
 	"vds.h"
 
-1508660137 /mnt/c/prj/vos/vtypes.h
+1528922006 /mnt/c/prj/vos/vtypes.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -38,7 +39,7 @@
 	<string.h>
 	<stdio.h>
 
-1528408703 source:/mnt/c/prj/vdb/vdbcon.c
+1528924465 source:/mnt/c/prj/vdb/vdbcon.c
 	"vos.h"
 	"vdb.h"
 	"stdio.h"
@@ -287,7 +288,7 @@
 	"vdb-2.2.c"
 	"vdt-1.0.c"
 
-1528409205 source:/mnt/c/prj/vdb/vdb_http.c
+1528923244 source:/mnt/c/prj/vdb/vdb_http.c
 	"vdb.h"
 	"logger.c"
 	"std_sock.c"

@@ -215,6 +215,7 @@ int dbx_select(database *db,db_blob_handle *tmp,char *sql);
 
 
 int ora_connect(database *db,char *srvname,char *username,char *password);
+int db_errorf(database *db,char *fmt, ... );
 
 
 #endif  // VDBH
