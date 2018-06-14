@@ -26,8 +26,12 @@ fprintf(stderr,"vdbcon <database> [command] ...\n"
 ".compile        try compile this SQL\n"
 ".btest		 test bind for select * from dual where Dummy = :txt\n"
 ".reconnects     Start reconnect leack test\n"
-".sql ...    compile & exec sql"
-"select ....     executes a select\n");
+".sql ...    compile & exec sql\n"
+"select ....     executes a select\n"
+"@script    run script\n"
+".http.Auth <user:pass;user2:pass2>  add Basic auth for http\n"
+".http  starts internal http server\n"
+);
 return 0;
 }
 
@@ -325,6 +329,10 @@ if (lcmp(&p,".mode")) {
       if ( lcmp(&m,"json")) { mode=2; fprintf(stderr,"+mode  json now\n"); return 1;}
       fprintf(stderr,"ERR: mode %s unknown\n",m);
       return 2;
+      }
+if (lcmp(&p,".http.Auth")) { // set auth string
+      vdb_http_auth_set(p);
+      return 1;
       }
 if (lcmp(&p,".http")) { // start http server
       int code = vdb_http_start();

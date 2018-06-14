@@ -16,6 +16,7 @@
 					<Add option="-O2" />
 					<Add option="-Wno-pointer-sign" />
 					<Add option="-static" />
+					<Add option="-DHTTPSRV_AUTH" />
 					<Add directory="../vos" />
 					<Add directory="ora/include" />
 				</Compiler>
@@ -47,6 +48,7 @@
 		<Unit filename="vdb.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="vdb.h" />
 		<Unit filename="vdb_http.c">
 			<Option compilerVar="CC" />
 		</Unit>

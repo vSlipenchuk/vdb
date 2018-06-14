@@ -330,11 +330,15 @@ if (!f) { // try global /etc
 if (!f) return db_errorf(db,".vdb.hosts - not found in ./ or ~/ or /etc)");
 int l=strlen(cs);
 while(fgets(buf,sizeof(buf),f)) { // read line by line
-  if (strncmp(buf,cs,l)==0) { // found!
+  char *p=buf; int i=strlen(p);
+  while(i>0 && strchr(" \r\n\t",p[i-1])) i--; p[i]=0; // rtrim
+  while(i>0 && strchr(" \r\n\t",p[0])) {i--;p++;};   // ltrim
+  for(i=0;p[i] && !strchr(" \r\n\t",p[i]);i++); // alias name
+  //printf("ALIAS:<%*.*s> REST:%s\n",i,i,p,p+i);
+  if (i==l && strncmp(p,cs,l)==0) { // found!
      fclose(f);
-     cs=buf+l; while(*cs && (*cs==' ')) cs++; // ltrim
-     l=strlen(cs); while(l>0 && strchr(" \r\n",cs[l-1])) l--; // rtrim
-     cs[l]=0;
+     cs=p+l; while(*cs && (strchr(" \t\r\n",*cs))) cs++; // ltrim
+     //printf("CS:<%s>\n",cs);
      return db_connect_string(db,cs);
      }
   }

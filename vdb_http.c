@@ -75,6 +75,37 @@ if (!ok) return 0;
 return 1; // ok
 }
 
+int SocketSendHttpCode(Socket *sock, vssHttp *req, char *code, uchar *data, int len) {
+char buf[1024];
+vss reqID = {0,0};
+if (req && req->reqID.len>0) reqID=req->reqID;
+if (len<0) len = strlen(data);
+sprintf(buf,"HTTP/1.1 %s\r\nConnection: %s\r\n%s: %*.*s\r\nContent-Length: %d\r\n\r\n",code,sock->dieOnSend?"close":"Keep-Alive",
+    X_REQUEST_ID,VSS(reqID),len);
+strCat(&sock->out,buf,-1); // Add a header
+strCat(&sock->out,data,len); // Push it & Forget???
+//printf("TOSEND:%s\n",sock->out);
+sock->state = sockSend;
+// Wait???
+return 1;
+}
+
+char *Auth; //userpass="vovka:password;master:key";
+
+int getUserId(char *UserPass) {
+//printf("UP=%s Auth=%s\n",UserPass,Auth);
+if (strLength(Auth)==0) return 1; // no auth - ok
+vss A=vssCreate(Auth,-1);
+vss UP=vssCreate(UserPass,-1);
+while (A.len>0) {
+  vss U = vssGetTillStr(&A,";",1,1);
+  if (U.len==UP.len && memcmp(U.data,UP.data,U.len)==0) return 1; // found
+  }
+//printf("Not found\n");
+return 0; // not found
+}
+
+
 int onHttpSql(Socket *sock, vssHttp *req, SocketMap *map) {
 strSetLength(&srv->buf,0); // ClearResulted
 char *sql=req->B.data;
@@ -90,6 +121,7 @@ char buf[1024];
 httpSrv *srv = sock->pool;
 strSetLength(&srv->buf,0); // ClearResulted
 SocketMap *m = SocketMapFind(dbmap,&req->page);
+//if (!checkAuth(sock,req)) return 1; // Done, no auth
 if (!m) { // try find in local dir
    sprintf(buf,".db/%*.*s",VSS(req->page));
    printf("Find Local File: %s...\n",buf);
@@ -124,7 +156,11 @@ SocketPrintHttp(sock,req,"%s",buf); // Flash Results as http
 return 1; // OK - generated
 }
 
-
+int vdb_http_auth_set(char *auth) {
+strClear(&Auth);
+strCat(&Auth,auth,-1);
+return 1;
+}
 
 
 
@@ -136,6 +172,11 @@ srv->log =  srv->srv.log = logOpen("microHttp.log"); // Create a logger
 srv->logLevel = srv->srv.logLevel = logLevel;
 srv->keepAlive=keepAlive;
 srv->readLimit.Limit = Limit;
+#ifdef HTTPSRV_AUTH
+srv->realm = "my realm";
+srv->auth = getUserId;
+#endif // HTTPSRV_AUTH
+
 IFLOG(srv,0,"...starting microHttp {port:%d,logLevel:%d,rootDir:'%s',keepAlive:%d,Limit:%d},\n   mimes:'%s'\n",
   port,logLevel,rootDir,keepAlive,Limit,
   mimes);
